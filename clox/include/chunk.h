@@ -6,10 +6,15 @@
 #include "common.h"
 #include "value.h"
 
-enum OpCode
+enum Op : uint8_t
 {
-	OP_RETURN,
-	OP_CONSTANT
+	OP_CONSTANT,
+	OP_ADD,
+	OP_SUBTRACT,
+	OP_MULTIPLY,
+	OP_DIVIDE,
+	OP_NEGATE,
+	OP_RETURN
 };
 
 struct Chunk
@@ -17,22 +22,25 @@ struct Chunk
 	Chunk();
 	~Chunk();
 
-	template<typename T>
-	void writeCode(T byte, const size_t line) { writeCode(static_cast<uint8_t>(byte), line); }
-	void writeCode(uint8_t byte, size_t line);
-	size_t addConstant(Value value);
+	//template<typename T>
+	//void writeCode(T code, const size_t line) { writeCode(static_cast<uint8_t>(code), line); }
+	//void writeOp(Op op, size_t line) { writeByte(static_cast<uint8_t>(op), line); }
+	//void WriteConstant(size_t constant, size_t line) { writeByte(static_cast<uint8_t>(constant), line); }
+	void writeByte(uint8_t byte, size_t line = 123);
+	uint8_t addConstant(Value value); // nts: returnvalue?
 
 	void disassemble(const char* name) const;
+	size_t disassembleInstruction(size_t offset) const;
 
-
-private:
 	Blob<uint8_t> code;
 	Blob<size_t> lines;
 	Blob<Value> constants;
 
-	size_t disassembleInstruction(size_t offset) const;
+private:
 
 	static size_t simpleInstruction(const std::string& name, size_t offset);
 	size_t constantInstruction(const char* name, size_t offset) const;
 
 };
+
+

@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-void* reallocate(void* pointer, size_t, size_t newSize)
+void* reallocate(void* pointer, size_t, const size_t newSize)
 {
 	if (newSize == 0)
 	{

@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <cassert>
+
 #include "memory.h"
 
 template <typename T>
@@ -66,8 +68,14 @@ void Blob<T>::write(T entry)
 
 template <typename T>
 T& Blob<T>::operator[](size_t index)
-{ return m_ptr[index]; }
+{
+	assert(index <= m_count);
+	return m_ptr[index];
+}
 
 template <typename T>
 const T& Blob<T>::operator[](size_t index) const
-{ return m_ptr[index]; }
+{
+	assert(index <= m_count);
+	return m_ptr[index];
+}
