@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <cstdint>
+#include <string>
 
 #include "value.h"
 
@@ -29,7 +30,7 @@ enum InterpretResult
 void initVM();
 void freeVM();
 
-InterpretResult interpret(Chunk* chunk);
+InterpretResult interpret(const std::string& source);
 
 void push(Value value);
 Value pop();

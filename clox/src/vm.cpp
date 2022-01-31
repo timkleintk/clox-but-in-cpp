@@ -1,6 +1,7 @@
 ﻿#include "vm.h"
 
 #include "chunk.h"
+#include "compiler.h"
 
 namespace
 {
@@ -20,7 +21,7 @@ void initVM()
 void freeVM()
 {}
 
-static InterpretResult run()
+[[maybe_unused]] static InterpretResult run()
 {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants[READ_BYTE()])
@@ -73,11 +74,10 @@ static InterpretResult run()
 #undef READ_BYTE
 }
 
-InterpretResult interpret(Chunk* chunk)
+InterpretResult interpret(const std::string& source)
 {
-	vm.chunk = chunk;
-	vm.ip = &chunk->code[0];
-	return run();
+	compile(source);
+	return INTERPRET_OK;
 }
 
 void push(Value value)
