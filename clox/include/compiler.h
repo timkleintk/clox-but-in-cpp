@@ -1,4 +1,5 @@
 ﻿#pragma once
 #include <string>
 
-void compile(const std::string& source);
+struct Chunk;
+bool compile(const std::string& source, Chunk&);

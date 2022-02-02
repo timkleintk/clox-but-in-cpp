@@ -116,7 +116,7 @@ static void repl(const bool qualityOfLife)
 		if (source == "clear") { system("CLS"); continue; }
 
 		// multiline inputs
-		while (!IsSourceComplete(source))
+		while (!IsSourceComplete(source), false) // disable multiline support for now
 		{
 			if (qualityOfLife)
 			{

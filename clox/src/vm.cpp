@@ -76,8 +76,19 @@ void freeVM()
 
 InterpretResult interpret(const std::string& source)
 {
-	compile(source);
-	return INTERPRET_OK;
+	Chunk chunk;
+
+	if (!compile(source, chunk))
+	{
+		return INTERPRET_COMPILE_ERROR;
+	}
+
+	vm.chunk = &chunk;
+	vm.ip = &vm.chunk->code[0];
+
+	const InterpretResult result = run();
+
+	return result;
 }
 
 void push(Value value)

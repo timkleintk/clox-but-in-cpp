@@ -26,8 +26,8 @@ struct Chunk
 	//void writeCode(T code, const size_t line) { writeCode(static_cast<uint8_t>(code), line); }
 	//void writeOp(Op op, size_t line) { writeByte(static_cast<uint8_t>(op), line); }
 	//void WriteConstant(size_t constant, size_t line) { writeByte(static_cast<uint8_t>(constant), line); }
-	void writeByte(uint8_t byte, size_t line = 123);
-	uint8_t addConstant(Value value); // nts: returnvalue?
+	void writeByte(uint8_t byte, size_t line);
+	int addConstant(Value value);
 
 	void disassemble(const char* name) const;
 	size_t disassembleInstruction(size_t offset) const;
