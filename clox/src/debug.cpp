@@ -36,24 +36,29 @@ size_t Chunk::disassembleInstruction(const size_t offset) const
 		printf("%4llu ", lines[offset]);
 	}
 
+#define SIMPLE_INSTRUCTION(name) case name: return simpleInstruction(#name,offset)
+
 	switch (const Op instruction = static_cast<Op>(code[offset]))
 	{
 	case OP_CONSTANT:
-		return constantInstruction("OP_CONSTANT", offset);
-	case OP_ADD:
-		return simpleInstruction("OP_ADD", offset);
-	case OP_SUBTRACT:
-		return simpleInstruction("OP_SUBTRACT", offset);
-	case OP_MULTIPLY:
-		return simpleInstruction("OP_MULTIPLY", offset);
-	case OP_DIVIDE:
-		return simpleInstruction("OP_DIVIDE", offset);
-	case OP_NEGATE:
-		return simpleInstruction("OP_NEGATE", offset);
-	case OP_RETURN:
-		return simpleInstruction("OP_RETURN", offset);
+	return constantInstruction("OP_CONSTANT", offset);
+	SIMPLE_INSTRUCTION(OP_NIL);
+	SIMPLE_INSTRUCTION(OP_TRUE);
+	SIMPLE_INSTRUCTION(OP_FALSE);
+	SIMPLE_INSTRUCTION(OP_EQUAL);
+	SIMPLE_INSTRUCTION(OP_GREATER);
+	SIMPLE_INSTRUCTION(OP_LESS);
+	SIMPLE_INSTRUCTION(OP_ADD);
+	SIMPLE_INSTRUCTION(OP_SUBTRACT);
+	SIMPLE_INSTRUCTION(OP_MULTIPLY);
+	SIMPLE_INSTRUCTION(OP_DIVIDE);
+	SIMPLE_INSTRUCTION(OP_NOT);
+	SIMPLE_INSTRUCTION(OP_NEGATE);
+	SIMPLE_INSTRUCTION(OP_RETURN);
 	default:
 		std::cout << "Unknown opcode " << static_cast<uint8_t>(instruction) << "\n";
 		return offset + 1;
 	}
+
+#undef SIMPLE_INSTRUCTION
 }
