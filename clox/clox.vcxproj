@@ -93,6 +93,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\compiler.cpp" />
     <ClCompile Include="src\scanner.cpp" />
     <ClCompile Include="src\value.cpp" />
@@ -109,6 +110,7 @@
     <ClInclude Include="include\compiler.h" />
     <ClInclude Include="include\memory.h" />
     <ClInclude Include="include\debug.h" />
+    <ClInclude Include="include\object.h" />
     <ClInclude Include="include\scanner.h" />
     <ClInclude Include="include\value.h" />
     <ClInclude Include="include\vm.h" />

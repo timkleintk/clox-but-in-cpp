@@ -17,6 +17,7 @@ struct VM
 	uint8_t* ip = nullptr;
 	Value stack[STACK_MAX];
 	Value* stackTop;
+	Obj* objects;
 };
 
 enum InterpretResult
@@ -25,6 +26,8 @@ enum InterpretResult
 	INTERPRET_COMPILE_ERROR,
 	INTERPRET_RUNTIME_ERROR
 };
+
+extern VM vm;
 
 
 void initVM();

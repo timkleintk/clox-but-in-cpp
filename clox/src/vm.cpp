@@ -1,13 +1,13 @@
 ﻿#include "vm.h"
 
+#include <cstdarg>
+//#include <cstring> // book says I need this, but I don't
+
 #include "chunk.h"
 #include "compiler.h"
-#include <cstdarg>
+#include "object.h"
 
-namespace
-{
-	VM vm;
-}
+VM vm;
 
 static void resetStack()
 {
@@ -24,7 +24,7 @@ static void runtimeError(const char* format, ...) {
 	// nts: the book says to write this, but I fucked around so I have to do something else, possible BUG!
 	// size_t instruction = vm.ip - vm.chunk->code - 1;
 	// size_t instruction = vm.ip - reinterpret_cast<uint8_t*>( & (vm.chunk->code) - 1);
-	size_t instruction = vm.ip -  &vm.chunk->code[0] - 1; // index of the instruction within the current chunk (?)
+	size_t instruction = vm.ip - &vm.chunk->code[0] - 1; // index of the instruction within the current chunk (?)
 	int line = static_cast<int>(vm.chunk->lines[instruction]);
 	fprintf(stderr, "[line %d] in script\n", line);
 	resetStack();
@@ -34,10 +34,13 @@ static void runtimeError(const char* format, ...) {
 void initVM()
 {
 	resetStack();
+	vm.objects = nullptr;
 }
 
 void freeVM()
-{}
+{
+	freeObjects();
+}
 
 static  Value peek(int distance) {
 	return vm.stackTop[-1 - distance];
@@ -45,6 +48,21 @@ static  Value peek(int distance) {
 
 static bool isFalsey(Value value) {
 	return IS_NIL(value) || IS_BOOL(value) && value.as.boolean;
+}
+
+static void concatenate()
+{
+	ObjString* b = AS_STRING(pop());
+	ObjString* a = AS_STRING(pop());
+
+	size_t length = a->length + b->length;
+	char* chars = ALLOCATE(char, length + 1);
+	memcpy(chars, a->chars, a->length);
+	memcpy(chars + a->length, b->chars, b->length);
+	chars[length] = '\0';
+
+	ObjString* result = takeString(chars, length);
+	push(OBJ_VAL(result));
 }
 
 [[maybe_unused]] static InterpretResult run()
@@ -94,14 +112,32 @@ static bool isFalsey(Value value) {
 			break;
 		case OP_GREATER:	BINARY_OP(BOOL_VAL, > ); break;
 		case OP_LESS:		BINARY_OP(BOOL_VAL, < ); break;
-		case OP_ADD:		BINARY_OP(NUMBER_VAL, +); break;
+
+		case OP_ADD: {
+			if (IS_STRING(peek(0)) && IS_STRING(peek(1)))
+			{
+				concatenate();
+			}
+			else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1)))
+			{
+				double b = AS_NUMBER(pop());
+				double a = AS_NUMBER(pop());
+				push(NUMBER_VAL(a + b));
+			}
+			else
+			{
+				runtimeError("Operands must be two numbers or two strings.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			break;
+		}
 		case OP_SUBTRACT:	BINARY_OP(NUMBER_VAL, -); break;
 		case OP_MULTIPLY:	BINARY_OP(NUMBER_VAL, *); break;
-		case OP_DIVIDE:		BINARY_OP(NUMBER_VAL, /); break;
+		case OP_DIVIDE:		BINARY_OP(NUMBER_VAL, / ); break;
 		case OP_NOT:
 			push(BOOL_VAL(isFalsey(pop())));
 			break;
-		case OP_NEGATE:		
+		case OP_NEGATE:
 			if (!IS_NUMBER(peek(0))) {
 				runtimeError("Operand must be a number.");
 				return INTERPRET_RUNTIME_ERROR;
