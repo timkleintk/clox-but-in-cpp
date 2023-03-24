@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 
+#include "table.h"
 #include "value.h"
 
 struct Chunk;
@@ -17,6 +18,7 @@ struct VM
 	uint8_t* ip = nullptr;
 	Value stack[STACK_MAX];
 	Value* stackTop;
+	Table strings;
 	Obj* objects;
 };
 

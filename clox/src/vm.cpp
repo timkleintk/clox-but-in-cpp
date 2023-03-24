@@ -35,14 +35,16 @@ void initVM()
 {
 	resetStack();
 	vm.objects = nullptr;
+	initTable(&vm.strings);
 }
 
 void freeVM()
 {
+	freeTable(&vm.strings);
 	freeObjects();
 }
 
-static  Value peek(int distance) {
+static Value peek(int distance) {
 	return vm.stackTop[-1 - distance];
 }
 

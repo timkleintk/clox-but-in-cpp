@@ -23,6 +23,7 @@ struct ObjString {
 	Obj obj;
 	size_t length;
 	char* chars;
+	uint32_t hash;
 };
 
 ObjString* takeString(char* chars, size_t length); // construct a string Obj and take ownership of the char array

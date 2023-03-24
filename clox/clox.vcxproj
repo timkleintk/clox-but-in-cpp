@@ -96,6 +96,7 @@
     <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\compiler.cpp" />
     <ClCompile Include="src\scanner.cpp" />
+    <ClCompile Include="src\table.cpp" />
     <ClCompile Include="src\value.cpp" />
     <ClCompile Include="src\chunk.cpp" />
     <ClCompile Include="src\debug.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="include\debug.h" />
     <ClInclude Include="include\object.h" />
     <ClInclude Include="include\scanner.h" />
+    <ClInclude Include="include\table.h" />
     <ClInclude Include="include\value.h" />
     <ClInclude Include="include\vm.h" />
   </ItemGroup>
