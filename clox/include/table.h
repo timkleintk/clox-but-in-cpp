@@ -11,18 +11,31 @@ typedef struct {
 	Value value;
 } Entry;
 
-typedef struct {
-	size_t count;
-	size_t capacity;
-	Entry* entries;
-} Table;
+class Table {
+public:
+	Table() = default;
+	~Table();
 
-// TODO: turn into Table class
+	// operations
+	bool get(const ObjString* key, Value* out_value) const;
+	bool set(ObjString* key, Value value);
+	bool del(const ObjString* key) const;
+	void addAll(Table& to) const;
 
-void initTable(Table* table);
-void freeTable(Table* table);
-bool tableGet(Table* table, ObjString* key, Value* value);
-bool tableSet(Table* table, ObjString* key, Value value);
-bool tableDelete(Table* table, ObjString* key);
-void tableAddAll(const Table* from, Table* to);
-ObjString* tableFindString(Table* table, const char* chars, size_t length, uint32_t hash);
+	ObjString* findString(const char* chars, size_t length, uint32_t hash) const;
+
+	// getters
+	size_t count() const { return m_count; }
+	size_t capacity() const { return m_capacity; }
+
+private:
+
+	void adjustCapacity(size_t capacity);
+
+
+	size_t m_count = 0;
+	size_t m_capacity = 0;
+	Entry* m_entries = nullptr;
+};
+
+

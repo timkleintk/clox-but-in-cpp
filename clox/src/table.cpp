@@ -9,20 +9,16 @@
 
 #define TABLE_MAX_LOAD 0.75
 
-void initTable(Table* table)
+
+Table::~Table()
 {
-	table->count = 0;
-	table->capacity = 0;
-	table->entries = nullptr;
+	FREE_ARRAY(Entry, m_entries, m_capacity);
 }
 
-void freeTable(Table* table)
-{
-	FREE_ARRAY(Entry, table->entries, table->capacity);
-	initTable(table);
-}
 
-static Entry* findEntry(Entry* entries, size_t capacity, const ObjString* key)
+// utility function ------------------------------------------------
+
+static Entry* findEntry(Entry* entries, const size_t capacity, const ObjString* key)
 {
 	uint32_t index = key->hash % capacity;
 	Entry* tombstone = nullptr;
@@ -50,83 +46,73 @@ static Entry* findEntry(Entry* entries, size_t capacity, const ObjString* key)
 	}
 }
 
-bool tableGet(Table* table, ObjString* key, Value* value)
-{
-	if (table->count == 0) return false;
 
-	const Entry* entry = findEntry(table->entries, table->capacity, key);
+// operations ------------------------------------------------------
+
+bool Table::get(const ObjString* key, Value* out_value) const
+{
+	if (m_count == 0) return false;
+
+	const Entry* entry = findEntry(m_entries, m_capacity, key);
 	if (entry->key == nullptr) return false;
 
-	*value = entry->value; // nts: why not return the value pointer and nullptr? I guess because we want to return a copy -> return const pointer?
+	// nts: why not return the value pointer and nullptr? I guess because we want to return a copy -> return const pointer?
+	*out_value = entry->value;
 	return true;
 }
 
-static void adjustCapacity(Table* table, size_t capacity)
+bool Table::set(ObjString* key, Value value)
 {
-	Entry* entries = ALLOCATE(Entry, capacity);
-	for (size_t i = 0; i < capacity; i++)
+	if (m_count + 1 > static_cast<size_t>(m_capacity * TABLE_MAX_LOAD))
 	{
-		entries[i].key = nullptr;
-		entries[i].value = NIL_VAL;
+		const size_t capacity = GROW_CAPACITY(m_capacity);
+		adjustCapacity(capacity);
 	}
-
-	table->count = 0;
-
-	for (size_t i = 0; i < table->capacity; i++)
-	{
-		const Entry* entry = &table->entries[i];
-		if (entry->key == nullptr) continue;
-
-		Entry* dest = findEntry(entries, capacity, entry->key);
-		dest->key = entry->key;
-		dest->value = entry->value;
-		table->count++;
-
-	}
-
-	FREE_ARRAY(Entry, table->entries, table->capacity);
-	table->entries = entries;
-	table->capacity = capacity;
-}
-
-bool tableSet(Table* table, ObjString* key, Value value)
-{
-	if (table->count + 1 > table->capacity * TABLE_MAX_LOAD)
-	{
-		const size_t capacity = GROW_CAPACITY(table->capacity);
-		adjustCapacity(table, capacity);
-	}
-	Entry* entry = findEntry(table->entries, table->capacity, key);
+	Entry* entry = findEntry(m_entries, m_capacity, key);
 	const bool isNewKey = entry->key == nullptr;
-	if (isNewKey && IS_NIL(entry->value)) { table->count++; } // don't increment the count on tombstone usage
+	if (isNewKey && IS_NIL(entry->value)) { m_count++; } // don't increment the count on tombstone usage
 
 	entry->key = key;
 	entry->value = value;
 	return isNewKey;
 }
 
-bool tableDelete(Table* table, ObjString* key)
+bool Table::del(const ObjString* key) const
 {
-	if (table->count == 0) return false;
+	if (m_count == 0) return false;
 
 	// find the entry
-	Entry* entry = findEntry(table->entries, table->capacity, key);
+	Entry* entry = findEntry(m_entries, m_capacity, key);
 	if (entry->key == nullptr) return false;
 
 	// place a tombstone in the entry
 	entry->key = nullptr;
 	entry->value = BOOL_VAL(true);
+
 	return true;
 }
 
-ObjString* tableFindString(Table* table, const char* chars, size_t length, uint32_t hash)
+// nts: should this take the argument "to" or "from"?
+void Table::addAll(Table& to) const
 {
-	if (table->count == 0) return nullptr;
+	for (size_t i = 0; i < m_capacity; i++)
+	{
+		const auto& [key, value] = m_entries[i];
+		if (key != nullptr)
+		{
+			to.set(key, value);
+		}
+	}
+}
 
-	uint32_t index = hash % table->capacity;
+ObjString* Table::findString(const char* chars, size_t length, uint32_t hash) const
+{
+	if (m_count == 0) return nullptr;
+
+	uint32_t index = hash % m_capacity;
 	for (;;)
 	{
-		const Entry* entry = &table->entries[index];
+		const Entry* entry = &m_entries[index];
 		if (entry->key == nullptr)
 		{
 			// stop if we find an empty non-tombstone entry
@@ -138,18 +124,40 @@ ObjString* tableFindString(Table* table, const char* chars, size_t length, uint3
 			return entry->key;
 		}
 
-		index = (index + 1) % table->capacity;
+		index = (index + 1) % m_capacity;
 	}
 }
 
-void tableAddAll(Table* from, Table* to)
+
+
+void Table::adjustCapacity(size_t capacity)
 {
-	for (size_t i = 0; i < from->capacity; i++)
+	// allocate new entry array
+	auto entries = ALLOCATE(Entry, capacity);
+
+	// initialize values
+	for (size_t i = 0; i < capacity; i++)
 	{
-		const Entry* entry = &from->entries[i];
-		if (entry->key != nullptr)
-		{
-			tableSet(to, entry->key, entry->value);
-		}
+		entries[i].key = nullptr;
+		entries[i].value = NIL_VAL;
 	}
+
+	m_count = 0;
+
+	for (size_t i = 0; i < m_capacity; i++)
+	{
+		const Entry* src = &m_entries[i];
+		if (src->key == nullptr) continue;
+
+		Entry* dest = findEntry(entries, capacity, src->key);
+		dest->key = src->key;
+		dest->value = src->value;
+		m_count++;
+
+	}
+
+	FREE_ARRAY(Entry, m_entries, m_capacity);
+	m_entries = entries;
+	m_capacity = capacity;
 }
+
