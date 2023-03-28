@@ -69,6 +69,7 @@ static void concatenate()
 {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants[READ_BYTE()])
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType, op) \
 	do { \
 		if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
@@ -105,6 +106,34 @@ static void concatenate()
 		case OP_NIL: push(NIL_VAL); break;
 		case OP_TRUE: push(BOOL_VAL(true)); break;
 		case OP_FALSE: push(BOOL_VAL(false)); break;
+		case OP_POP: pop(); break;
+		case OP_GET_GLOBAL: {
+			ObjString* name = READ_STRING();
+			Value value;
+			if (!vm.globals.get(name, &value))
+			{
+				runtimeError("Undefined variable '%s'.", name->chars);
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			push(value);
+			break;
+		}
+		case OP_DEFINE_GLOBAL: {
+			ObjString* name = READ_STRING();
+			vm.globals.set(name, peek(0));
+			pop();
+			break;
+		}
+		case OP_SET_GLOBAL: {
+			ObjString* name = READ_STRING();
+			if (vm.globals.set(name, peek(0)))
+			{
+				vm.globals.del(name);
+				runtimeError("Undefined variable '%s'.", name->chars);
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			break;
+		}
 		case OP_EQUAL:
 			Value r = pop();
 			Value l = pop();
@@ -144,10 +173,13 @@ static void concatenate()
 			}
 			push(NUMBER_VAL(-AS_NUMBER(pop())));
 			break;
-		case OP_RETURN:
-		{
+		case OP_PRINT:
 			printValue(pop());
 			printf("\n");
+			break;
+		case OP_RETURN:
+		{
+			// Exit interpreter
 			return INTERPRET_OK;
 		}
 		default:
@@ -155,6 +187,7 @@ static void concatenate()
 		}
 	}
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef READ_BYTE
 }
 

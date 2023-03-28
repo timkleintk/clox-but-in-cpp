@@ -18,6 +18,7 @@ public:
 
 	// operations
 	bool get(const ObjString* key, Value* out_value) const;
+	// returns true if the key is new to the table
 	bool set(ObjString* key, Value value);
 	bool del(const ObjString* key) const;
 	void addAll(Table& to) const;

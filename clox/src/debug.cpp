@@ -41,10 +41,17 @@ size_t Chunk::disassembleInstruction(const size_t offset) const
 	switch (const Op instruction = static_cast<Op>(code[offset]))
 	{
 	case OP_CONSTANT:
-	return constantInstruction("OP_CONSTANT", offset);
+		return constantInstruction("OP_CONSTANT", offset);
 	SIMPLE_INSTRUCTION(OP_NIL);
 	SIMPLE_INSTRUCTION(OP_TRUE);
 	SIMPLE_INSTRUCTION(OP_FALSE);
+	SIMPLE_INSTRUCTION(OP_POP);
+	case OP_GET_GLOBAL: 
+		return constantInstruction("OP_GET_GLOBAL",offset);
+	case OP_DEFINE_GLOBAL:	
+		return constantInstruction("OP_DEFINE_GLOBAL", offset);
+	case OP_SET_GLOBAL:
+		return constantInstruction("OP_SET_GLOBAL", offset);
 	SIMPLE_INSTRUCTION(OP_EQUAL);
 	SIMPLE_INSTRUCTION(OP_GREATER);
 	SIMPLE_INSTRUCTION(OP_LESS);
@@ -54,6 +61,7 @@ size_t Chunk::disassembleInstruction(const size_t offset) const
 	SIMPLE_INSTRUCTION(OP_DIVIDE);
 	SIMPLE_INSTRUCTION(OP_NOT);
 	SIMPLE_INSTRUCTION(OP_NEGATE);
+	SIMPLE_INSTRUCTION(OP_PRINT);
 	SIMPLE_INSTRUCTION(OP_RETURN);
 	default:
 		std::cout << "Unknown opcode " << static_cast<uint8_t>(instruction) << "\n";
