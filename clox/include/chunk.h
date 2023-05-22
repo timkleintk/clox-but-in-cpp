@@ -13,6 +13,8 @@ enum Op : uint8_t
 	OP_TRUE,
 	OP_FALSE,
 	OP_POP,
+	OP_GET_LOCAL,
+	OP_SET_LOCAL,
 	OP_GET_GLOBAL,
 	OP_DEFINE_GLOBAL,
 	OP_SET_GLOBAL,
@@ -52,6 +54,7 @@ private:
 
 	static size_t simpleInstruction(const std::string& name, size_t offset);
 	size_t constantInstruction(const char* name, size_t offset) const;
+	size_t byteInstruction(const char* name, size_t offset) const;
 
 };
 

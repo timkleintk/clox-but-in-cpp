@@ -10,6 +10,12 @@ size_t Chunk::simpleInstruction(const std::string& name, const size_t offset)
 	return offset + 1;
 }
 
+size_t Chunk::byteInstruction(const char* name, size_t offset) const
+{
+	uint8_t slot = code[offset + 1];
+	printf("%-16s %4d\n", name, slot);
+	return offset + 2;
+}
 
 size_t Chunk::constantInstruction(const char* name, size_t offset) const
 {
@@ -46,6 +52,10 @@ size_t Chunk::disassembleInstruction(const size_t offset) const
 	SIMPLE_INSTRUCTION(OP_TRUE);
 	SIMPLE_INSTRUCTION(OP_FALSE);
 	SIMPLE_INSTRUCTION(OP_POP);
+	case OP_GET_LOCAL:
+		return byteInstruction("OP_GET_LOCAL", offset);
+	case OP_SET_LOCAL:
+		return byteInstruction("OP_SET_LOCAL", offset);
 	case OP_GET_GLOBAL: 
 		return constantInstruction("OP_GET_GLOBAL",offset);
 	case OP_DEFINE_GLOBAL:	
