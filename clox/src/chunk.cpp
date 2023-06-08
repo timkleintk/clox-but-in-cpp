@@ -34,3 +34,8 @@ void Chunk::disassemble(const char* name) const
 	}
 }
 
+size_t Chunk::count() const
+{
+	return code.size();
+}
+

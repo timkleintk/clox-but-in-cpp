@@ -17,6 +17,14 @@ size_t Chunk::byteInstruction(const char* name, size_t offset) const
 	return offset + 2;
 }
 
+size_t Chunk::jumpInstruction(const char* name, int sign, size_t offset) const
+{
+	uint16_t jump = (uint16_t)(code[offset + 1] << 8);
+	jump |= code[offset + 2];
+	printf("%-16s %4llu -> %llu\n", name, offset, offset + 3 + sign * jump);
+	return offset + 3;
+}
+
 size_t Chunk::constantInstruction(const char* name, size_t offset) const
 {
 	const uint8_t constant = code[offset + 1];
@@ -31,7 +39,7 @@ size_t Chunk::constantInstruction(const char* name, size_t offset) const
 size_t Chunk::disassembleInstruction(const size_t offset) const
 {
 	// nts: printf vs std::cout?
-	printf("%04zu ", offset);
+	printf("%04llu ", offset);
 
 	if (offset > 0 && lines[offset] == lines[offset - 1])
 	{
@@ -72,7 +80,13 @@ size_t Chunk::disassembleInstruction(const size_t offset) const
 	SIMPLE_INSTRUCTION(OP_NOT);
 	SIMPLE_INSTRUCTION(OP_NEGATE);
 	SIMPLE_INSTRUCTION(OP_PRINT);
-	SIMPLE_INSTRUCTION(OP_RETURN);
+	case OP_JUMP:
+		return jumpInstruction("OP_JUMP", 1, offset);
+	case OP_JUMP_IF_FALSE:
+		return jumpInstruction("OP_JUMP_IF_FALSE", 1, offset);
+	case OP_LOOP:
+		return jumpInstruction("OP_LOOP", -1, offset);
+		SIMPLE_INSTRUCTION(OP_RETURN);
 	default:
 		std::cout << "Unknown opcode " << static_cast<uint8_t>(instruction) << "\n";
 		return offset + 1;

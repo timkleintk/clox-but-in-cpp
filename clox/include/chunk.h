@@ -28,6 +28,9 @@ enum Op : uint8_t
 	OP_NOT,
 	OP_NEGATE,
 	OP_PRINT,
+	OP_JUMP,
+	OP_JUMP_IF_FALSE,
+	OP_LOOP,
 	OP_RETURN
 };
 
@@ -44,7 +47,9 @@ struct Chunk
 	int addConstant(Value value);
 
 	void disassemble(const char* name) const;
-	size_t disassembleInstruction(size_t offset) const;
+	size_t disassembleInstruction(const size_t offset) const;
+
+	size_t count() const;
 
 	Blob<uint8_t> code;
 	Blob<size_t> lines;
@@ -52,10 +57,10 @@ struct Chunk
 
 private:
 
-	static size_t simpleInstruction(const std::string& name, size_t offset);
+	static size_t simpleInstruction(const std::string& name, const size_t offset);
+	size_t jumpInstruction(const char* name, int sign, size_t offset) const;
 	size_t constantInstruction(const char* name, size_t offset) const;
 	size_t byteInstruction(const char* name, size_t offset) const;
-
 };
 
 
