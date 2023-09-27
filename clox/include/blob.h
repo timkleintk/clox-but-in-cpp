@@ -15,6 +15,7 @@ struct Blob
 
 	void write(T entry);
 
+	// todo: implement negative index support
 	T& operator[](size_t index);
 	const T& operator[](size_t index) const;
 

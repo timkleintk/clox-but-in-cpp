@@ -5,17 +5,27 @@
 #include "table.h"
 #include "value.h"
 
+struct ObjFunction;
 struct Chunk;
 
-#define STACK_MAX 256
+#define FRAMES_MAX 64
+#define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
+
+struct CallFrame
+{
+	ObjFunction* function;
+	uint8_t* ip;
+	Value* slots;
+};
 
 struct VM
 {
 	VM() = default;
 	~VM() = default;
+
+	CallFrame frames[FRAMES_MAX];
+	size_t frameCount;
 	
-	Chunk* chunk = nullptr;
-	uint8_t* ip = nullptr;
 	Value stack[STACK_MAX];
 	Value* stackTop;
 	Table globals;

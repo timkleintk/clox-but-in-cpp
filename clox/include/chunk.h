@@ -31,6 +31,7 @@ enum Op : uint8_t
 	OP_JUMP,
 	OP_JUMP_IF_FALSE,
 	OP_LOOP,
+	OP_CALL,
 	OP_RETURN
 };
 
@@ -47,7 +48,7 @@ struct Chunk
 	int addConstant(Value value);
 
 	void disassemble(const char* name) const;
-	size_t disassembleInstruction(const size_t offset) const;
+	size_t disassembleInstruction(const size_t offset, const char* name = nullptr) const;
 
 	size_t count() const;
 

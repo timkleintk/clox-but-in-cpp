@@ -23,13 +23,26 @@ static void freeObject(Obj* object)
 {
 	switch (object->type)
 	{
+	case OBJ_FUNCTION:
+	{
+		// todo: make sure this is correct, especially the name field
+		ObjFunction* function = reinterpret_cast<ObjFunction*>(object);
+		function->~ObjFunction();
+		FREE(ObjFunction, object);
+		break;
+	}
+	case OBJ_NATIVE:
+	{
+		FREE(ObjNative, object);
+		break;
+	}
 	case OBJ_STRING:
-		{
+	{
 		ObjString* string = reinterpret_cast<ObjString*>(object);
 		FREE_ARRAY(char, string->chars, string->length + 1);
 		FREE(ObjString, object);
 		break;
-		}
+	}
 	}
 }
 
