@@ -100,12 +100,13 @@ static void repl(const bool qualityOfLife)
 {
 	std::string source;
 	std::string line;
+	int lines = 1;
 
 	while (true)
 	{
 		if (qualityOfLife)
 		{
-			std::cout << "> ";
+			std::cout << "  > ";
 		}
 
 		// get input
@@ -116,16 +117,17 @@ static void repl(const bool qualityOfLife)
 		if (source == "clear") { system("CLS"); continue; }
 
 		// multiline inputs
-		while (!IsSourceComplete(source), false) // disable multiline support for now
+		while (!IsSourceComplete(source)) // disable multiline support for now
 		{
 			if (qualityOfLife)
 			{
-				std::cout << "  ";
+				printf("%-2d> ", ++lines);
 			}
 			std::getline(std::cin, line);
 			source += "\n";
 			source += line;
 		}
+		lines = 1;
 
 		// interpret
 		interpret(source);
