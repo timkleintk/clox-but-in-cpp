@@ -114,6 +114,7 @@
     <ClInclude Include="include\object.h" />
     <ClInclude Include="include\scanner.h" />
     <ClInclude Include="include\table.h" />
+    <ClInclude Include="include\util.h" />
     <ClInclude Include="include\value.h" />
     <ClInclude Include="include\vm.h" />
   </ItemGroup>

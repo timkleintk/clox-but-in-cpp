@@ -11,9 +11,13 @@
 #include <stdio.h>
 
 
-static bool IsSourceComplete(const std::string& source)
+// returns 0 if source is fully complete
+// returns -1 if source is in a string literal (maybe?)
+// returns the amount of unmatched open brackets (or in other words the indentation level)
+static int sourceIncompleteness(const std::string& source)
 {
-	std::stack<char> braceBalance;
+	//std::stack<char> braceBalance;
+	int braceBalance = 0;
 	char previous = 0;
 	bool inComment = false;
 	bool inString = false;
@@ -44,12 +48,13 @@ static bool IsSourceComplete(const std::string& source)
 				break;
 			case '{':
 			case '(':
-				braceBalance.push(c);
+				//braceBalance.push(c);
+				braceBalance++;
 				break;
 			case '}':
 			case ')':
 			{
-				const char complement = c == '}' ? '{' : '(';
+				/*const char complement = c == '}' ? '{' : '(';
 				if (!braceBalance.empty() && braceBalance.top() == complement)
 				{
 					braceBalance.pop();
@@ -57,7 +62,8 @@ static bool IsSourceComplete(const std::string& source)
 				else
 				{
 					return true;
-				}
+				}*/
+				braceBalance--;
 				break;
 			}
 			default:
@@ -68,13 +74,14 @@ static bool IsSourceComplete(const std::string& source)
 		}
 	}
 
-	if (inString) return false;
-	if (braceBalance.empty())
+	if (inString) return -1;
+	if (braceBalance == 0)
 	{
-		if (previous == '}' || previous == ';' || previous == '\0') return true;
+		//if (previous == '}' || previous == ';' || previous == '\0') return 0;
+		return 0;
 	}
 
-	return false;
+	return braceBalance;
 
 }
 
@@ -117,11 +124,19 @@ static void repl(const bool qualityOfLife)
 		if (source == "clear") { system("CLS"); continue; }
 
 		// multiline inputs
-		while (!IsSourceComplete(source)) // disable multiline support for now
+		int incompleteness;
+		while ((incompleteness = sourceIncompleteness(source)) != 0)
 		{
 			if (qualityOfLife)
 			{
 				printf("%-2d> ", ++lines);
+				if (incompleteness > 0)
+				{
+					for (int i = 0; i < incompleteness; i++)
+					{
+						std::cout << "  ";
+					}
+				}
 			}
 			std::getline(std::cin, line);
 			source += "\n";

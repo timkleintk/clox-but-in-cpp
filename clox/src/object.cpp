@@ -24,13 +24,30 @@ static Obj* allocateObject(size_t size, ObjType type)
 	return object;
 }
 
+ObjClosure* newClosure(ObjFunction* function)
+{
+	ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
+	for (int i = 0; i < function->upvalueCount; i++)
+	{
+		upvalues[i] = nullptr;
+	}
+	ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+	closure->function = function;
+	closure->upvalues = upvalues;
+	closure->upvalueCount = function->upvalueCount;
+	return closure;
+}
+
 ObjFunction* newFunction()
 {
-	auto* mem = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
-	auto* function = new(mem) ObjFunction();
-	assert(mem == function);
+	auto* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
+	//auto* function = new(mem) ObjFunction(); this fucks up the object type enum
+	//assert(mem == function);
 	function->arity = 0;
+	function->upvalueCount = 0;
 	function->name = nullptr;
+	auto* ptr = new (&function->chunk) Chunk();
+	assert(ptr == &function->chunk);
 	return function;
 }
 
@@ -87,6 +104,15 @@ ObjString* copyString(const char* chars, size_t length)
 	return allocateString(heapChars, length, hash);
 }
 
+ObjUpvalue* newUpvalue(Value* slot)
+{
+	ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
+	upvalue->closed = NIL_VAL;
+	upvalue->location = slot;
+	upvalue->next = nullptr;
+	return upvalue;
+}
+
 static void printFunction(ObjFunction* function)
 {
 	if (function->name == nullptr)
@@ -101,6 +127,9 @@ void printObject(Value value)
 {
 	switch (OBJ_TYPE(value))
 	{
+	case OBJ_CLOSURE:
+		printFunction(AS_CLOSURE(value)->function);
+		break;
 	case OBJ_FUNCTION:
 		printFunction(AS_FUNCTION(value));
 		break;
@@ -109,6 +138,9 @@ void printObject(Value value)
 		break;
 	case OBJ_STRING:
 		printf("%s", AS_CSTRING(value));
+		break;
+	case OBJ_UPVALUE:
+		printf("upvalue");
 		break;
 	default:
 		printf("Unknown Object, could not print.");

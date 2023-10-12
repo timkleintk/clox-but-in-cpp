@@ -18,6 +18,8 @@ enum Op : uint8_t
 	OP_GET_GLOBAL,
 	OP_DEFINE_GLOBAL,
 	OP_SET_GLOBAL,
+	OP_GET_UPVALUE,
+	OP_SET_UPVALUE,
 	OP_EQUAL,
 	OP_GREATER,
 	OP_LESS,
@@ -32,6 +34,8 @@ enum Op : uint8_t
 	OP_JUMP_IF_FALSE,
 	OP_LOOP,
 	OP_CALL,
+	OP_CLOSURE,
+	OP_CLOSE_UPVALUE,
 	OP_RETURN
 };
 
@@ -48,7 +52,7 @@ struct Chunk
 	int addConstant(Value value);
 
 	void disassemble(const char* name) const;
-	size_t disassembleInstruction(const size_t offset, const char* name = nullptr) const;
+	size_t disassembleInstruction(size_t offset) const;
 
 	size_t count() const;
 

@@ -4,6 +4,8 @@
 #include <iostream>
 
 #include "memory.h"
+#include "object.h"
+#include "util.h"
 
 Chunk::Chunk()
 = default;
@@ -27,11 +29,26 @@ int Chunk::addConstant(const Value value)
 void Chunk::disassemble(const char* name) const
 {
 	printf("== %s ==\n", name);
+	if (constants.size() > 0)
+	{
+		grey();
+		printf("constants: ");
+		for (size_t i = 0; i < constants.size(); i++)
+		{
+			printf("[ ");
+			if (IS_OBJ(constants[i]) && IS_STRING(constants[i])) { printf("\""); }
+			printValue(constants[i]);
+			if (IS_OBJ(constants[i]) && IS_STRING(constants[i])) { printf("\""); }
+			printf(" ]");
+		}
+		printf("\n");
+	}
 
 	for (size_t offset = 0; offset < code.size();)
 	{
 		offset = disassembleInstruction(offset);
 	}
+	printf("\n");
 }
 
 size_t Chunk::count() const

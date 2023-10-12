@@ -5,7 +5,8 @@
 #include "table.h"
 #include "value.h"
 
-struct ObjFunction;
+struct ObjUpvalue;
+struct ObjClosure;
 struct Chunk;
 
 #define FRAMES_MAX 64
@@ -13,7 +14,7 @@ struct Chunk;
 
 struct CallFrame
 {
-	ObjFunction* function;
+	ObjClosure* closure;
 	uint8_t* ip;
 	Value* slots;
 };
@@ -30,6 +31,7 @@ struct VM
 	Value* stackTop;
 	Table globals;
 	Table strings;
+	ObjUpvalue* openUpvalues;
 	Obj* objects;
 };
 

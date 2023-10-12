@@ -1,7 +1,13 @@
 ﻿#include "debug.h"
 
+#include <windows.h>
+
+#include "object.h"
+
 #include <cstdio>
 #include <iostream>
+
+#include "util.h"
 
 // nts: turn these into static functions taking in a "this" pointer?
 size_t Chunk::simpleInstruction(const std::string& name, const size_t offset)
@@ -36,18 +42,13 @@ size_t Chunk::constantInstruction(const char* name, size_t offset) const
 }
 
 
-size_t Chunk::disassembleInstruction(const size_t offset, const char* name) const
+size_t Chunk::disassembleInstruction(size_t offset) const
 {
 	// nts: printf vs std::cout?
-	if (offset == 0 && name != nullptr)
-	{
-		printf("%4s ", name);
-	}
-	else
-	{
-		printf("%04llu ", offset);
-	}
+	grey();
+	printf("%04llu ", offset);
 
+	grey();
 	if (offset > 0 && lines[offset] == lines[offset - 1])
 	{
 		printf("   | ");
@@ -56,6 +57,7 @@ size_t Chunk::disassembleInstruction(const size_t offset, const char* name) cons
 	{
 		printf("%4llu ", lines[offset]);
 	}
+	white();
 
 #define SIMPLE_INSTRUCTION(name) case name: return simpleInstruction(#name,offset)
 
@@ -77,6 +79,10 @@ size_t Chunk::disassembleInstruction(const size_t offset, const char* name) cons
 		return constantInstruction("OP_DEFINE_GLOBAL", offset);
 	case OP_SET_GLOBAL:
 		return constantInstruction("OP_SET_GLOBAL", offset);
+	case OP_GET_UPVALUE:
+		return byteInstruction("OP_GET_UPVALUE", offset);
+	case OP_SET_UPVALUE:
+		return byteInstruction("OP_SET_UPVALUE", offset);
 		SIMPLE_INSTRUCTION(OP_EQUAL);
 		SIMPLE_INSTRUCTION(OP_GREATER);
 		SIMPLE_INSTRUCTION(OP_LESS);
@@ -95,7 +101,29 @@ size_t Chunk::disassembleInstruction(const size_t offset, const char* name) cons
 		return jumpInstruction("OP_LOOP", -1, offset);
 	case OP_CALL:
 		return byteInstruction("OP_CALL", offset);
-		SIMPLE_INSTRUCTION(OP_RETURN);
+	case OP_CLOSURE:
+	{
+		offset++;
+		uint8_t constant = code[offset++];
+		printf("%-16s %4d ", "OP_CLOSURE", constant);
+		printValue(constants[constant]);
+		printf("\n");
+
+		ObjFunction* function = AS_FUNCTION(constants[constant]);
+		for (int j = 0; j < function->upvalueCount; j++)
+		{
+			int isLocal = code[offset++];
+			int index = code[offset++];
+			grey();
+			printf("%04llu      ", offset - 2);
+			white();
+			printf("|                     %s %d\n", isLocal ? "local" : "upvalue", index);
+		}
+
+		return offset;
+	}
+	SIMPLE_INSTRUCTION(OP_CLOSE_UPVALUE);
+	SIMPLE_INSTRUCTION(OP_RETURN);
 	default:
 		std::cout << "Unknown opcode " << static_cast<uint8_t>(instruction) << "\n";
 		return offset + 1;
