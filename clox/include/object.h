@@ -1,7 +1,8 @@
 #pragma once
 
-#include "chunk.h"
 #include "common.h"
+
+#include "chunk.h"
 #include "value.h"
 
 #define OBJ_TYPE(value)		(AS_OBJ(value)->type)
@@ -25,8 +26,19 @@ typedef enum {
 	OBJ_UPVALUE,
 } ObjType;
 
+#ifdef DEBUG_LOG_GC
+inline const char* ObjTypeNames[] = {
+	"OBJ_CLOSURE",
+	"OBJ_FUNCTION",
+	"OBJ_NATIVE",
+	"OBJ_STRING",
+	"OBJ_UPVALUE"
+};
+#endif
+
 struct Obj {
 	ObjType type;
+	bool isMarked;
 	Obj* next;
 };
 

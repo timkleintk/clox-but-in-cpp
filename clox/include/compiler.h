@@ -6,3 +6,4 @@
 
 struct Chunk;
 ObjFunction* compile(const std::string& source);
+void markCompilerRoots();

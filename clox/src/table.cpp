@@ -77,7 +77,7 @@ bool Table::set(ObjString* key, Value value)
 	return isNewKey;
 }
 
-bool Table::del(const ObjString* key) const
+bool Table::del(const ObjString* key)
 {
 	if (m_count == 0) return false;
 
@@ -128,12 +128,36 @@ ObjString* Table::findString(const char* chars, size_t length, uint32_t hash) co
 	}
 }
 
+void Table::removeWhite()
+{
+	for (size_t i = 0; i < m_capacity; i++)
+	{
+		Entry& entry = m_entries[i];
+		if (entry.key != nullptr && !entry.key->obj.isMarked)
+		{
+			del(entry.key);
+		}
+	}
+}
+
+void Table::mark()
+{
+	// go through the whole table, because entries aren't contiguous
+	for (size_t i = 0; i < m_capacity; i++)
+	{
+		Entry* entry = &m_entries[i];
+		if (entry->key == nullptr) continue;
+
+		markObject((Obj*)entry->key);
+		markValue(entry->value);
+	}
+}
 
 
 void Table::adjustCapacity(size_t capacity)
 {
 	// allocate new entry array
-	auto entries = ALLOCATE(Entry, capacity);
+	Entry* entries = ALLOCATE(Entry, capacity);
 
 	// initialize values
 	for (size_t i = 0; i < capacity; i++)

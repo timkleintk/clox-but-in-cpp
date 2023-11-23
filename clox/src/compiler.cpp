@@ -935,3 +935,13 @@ ObjFunction* compile(const std::string& source)
 	ObjFunction* function = endCompiler();
 	return parser.hadError ? nullptr : function;
 }
+
+void markCompilerRoots()
+{
+	Compiler* compiler = current;
+	while (compiler != nullptr)
+	{
+		markObject(reinterpret_cast<Obj*>(compiler->function));
+		compiler = compiler->enclosing;
+	}
+}

@@ -6,6 +6,7 @@
 #include "memory.h"
 #include "object.h"
 #include "util.h"
+#include "vm.h"
 
 Chunk::Chunk()
 = default;
@@ -22,7 +23,9 @@ void Chunk::writeByte(const uint8_t byte, const size_t line)
 
 int Chunk::addConstant(const Value value)
 {
+	push(value);
 	constants.write(value);
+	pop();
 	return static_cast<int>(constants.size() - 1);
 }
 
