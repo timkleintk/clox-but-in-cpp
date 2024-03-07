@@ -110,6 +110,12 @@ static bool callValue(Value callee, int argCount)
 	{
 		switch (OBJ_TYPE(callee))
 		{
+		case OBJ_CLASS:
+		{
+			ObjClass* klass = AS_CLASS(callee);
+			vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+			return true;
+		}
 		case OBJ_CLOSURE:
 			return call(AS_CLOSURE(callee), argCount);
 		case OBJ_NATIVE:
@@ -142,7 +148,7 @@ static ObjUpvalue* captureUpvalue(Value* local)
 	{
 		return upvalue;
 	}
-	
+
 	ObjUpvalue* createdUpvalue = newUpvalue(local);
 
 	if (prevUpvalue == nullptr)
@@ -152,14 +158,14 @@ static ObjUpvalue* captureUpvalue(Value* local)
 	else
 	{
 		prevUpvalue->next = createdUpvalue;
-	}  
+	}
 
 	return createdUpvalue;
 }
 
 static void closeUpvalues(Value* last)
 {
-	while(vm.openUpvalues != nullptr && vm.openUpvalues->location >= last)
+	while (vm.openUpvalues != nullptr && vm.openUpvalues->location >= last)
 	{
 		ObjUpvalue* upvalue = vm.openUpvalues;
 		upvalue->closed = *upvalue->location;
@@ -291,6 +297,41 @@ static void concatenate()
 			*frame->closure->upvalues[slot]->location = peek(0);
 			break;
 		}
+		case OP_GET_PROPERTY:
+		{
+			if (!IS_INSTANCE(peek(0)))
+			{
+				runtimeError("Only instances have properties.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			ObjInstance* instance = AS_INSTANCE(peek(0));
+			ObjString* name = READ_STRING();
+
+			Value value;
+			if (instance->fields.get(name, &value)) {
+				pop(); // instance
+				push(value);
+				break;
+			}
+
+			runtimeError("Undefined property '%s'.", name->chars);
+			return INTERPRET_RUNTIME_ERROR;
+		}
+		case OP_SET_PROPERTY:
+		{
+			if (!IS_INSTANCE(peek(1)))
+			{
+				runtimeError("Only instances have fields.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			ObjInstance* instance = AS_INSTANCE(peek(1));
+			ObjString* name = READ_STRING();
+			Value value = pop();
+			instance->fields.set(name, value);
+			pop(); // instance
+			push(value);
+			break;
+		}
 		case OP_EQUAL:
 			Value r = pop();
 			Value l = pop();
@@ -402,6 +443,9 @@ static void concatenate()
 			frame = &vm.frames[vm.frameCount - 1];
 			break;
 		}
+		case OP_CLASS:
+			push(OBJ_VAL(newClass(READ_STRING())));
+			break;
 		default:
 			break;
 		}

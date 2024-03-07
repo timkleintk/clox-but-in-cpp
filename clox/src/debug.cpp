@@ -83,6 +83,10 @@ size_t Chunk::disassembleInstruction(size_t offset) const
 		return byteInstruction("OP_GET_UPVALUE", offset);
 	case OP_SET_UPVALUE:
 		return byteInstruction("OP_SET_UPVALUE", offset);
+	case OP_GET_PROPERTY:
+		return constantInstruction("OP_GET_PROPERTY", offset);
+	case OP_SET_PROPERTY:
+		return constantInstruction("OP_SET_PROPERTY", offset);
 		SIMPLE_INSTRUCTION(OP_EQUAL);
 		SIMPLE_INSTRUCTION(OP_GREATER);
 		SIMPLE_INSTRUCTION(OP_LESS);
@@ -124,6 +128,8 @@ size_t Chunk::disassembleInstruction(size_t offset) const
 	}
 	SIMPLE_INSTRUCTION(OP_CLOSE_UPVALUE);
 	SIMPLE_INSTRUCTION(OP_RETURN);
+	case OP_CLASS:
+		return constantInstruction("OP_CLASS", offset);
 	default:
 		std::cout << "Unknown opcode " << static_cast<uint8_t>(instruction) << "\n";
 		return offset + 1;

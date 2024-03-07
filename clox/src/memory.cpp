@@ -23,7 +23,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize)
 	{
 #ifdef DEBUG_STRESS_GC
 		collectGarbage();
-#elif
+#else
 		if (vm.bytesAllocated > vm.nextGC)
 		{
 			collectGarbage();
@@ -86,6 +86,12 @@ static void blackenObject(Obj* object)
 
 	switch (object->type)
 	{
+	case OBJ_CLASS:
+	{
+		ObjClass* klass = reinterpret_cast<ObjClass*>(object);
+		markObject(reinterpret_cast<Obj*>(klass->name));
+		break;
+	}
 	case OBJ_CLOSURE:
 	{
 
@@ -102,6 +108,13 @@ static void blackenObject(Obj* object)
 		ObjFunction* function = reinterpret_cast<ObjFunction*>(object);
 		markObject(reinterpret_cast<Obj*>(function->name));
 		markArray(function->chunk.constants);
+		break;
+	}
+	case OBJ_INSTANCE:
+	{
+		ObjInstance* instance = reinterpret_cast<ObjInstance*>(object);
+		markObject((Obj*)instance->klass);
+		instance->fields.mark();
 		break;
 	}
 	case OBJ_UPVALUE:
@@ -122,6 +135,11 @@ static void freeObject(Obj* object)
 #endif
 	switch (object->type)
 	{
+	case OBJ_CLASS:
+	{
+		FREE(ObjClass, object);
+		break;
+	}
 	case OBJ_CLOSURE:
 	{
 		ObjClosure* closure = reinterpret_cast<ObjClosure*>(object);
@@ -135,6 +153,13 @@ static void freeObject(Obj* object)
 		ObjFunction* function = reinterpret_cast<ObjFunction*>(object);
 		function->chunk.~Chunk();
 		FREE(ObjFunction, object);
+		break;
+	}
+	case OBJ_INSTANCE:
+	{
+		ObjInstance* instance = reinterpret_cast<ObjInstance*>(object);
+		instance->fields.~Table();
+		FREE(ObjInstance, object);
 		break;
 	}
 	case OBJ_NATIVE:
